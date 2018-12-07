@@ -4,32 +4,36 @@
 #include <cmath>
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Float32.h>
+#include "ros/console.h"
 
 double current_speed = 0.0;
 double current_steering_angle = 0.0;
 
   void car_velocityCallback(const std_msgs::Float32::ConstPtr& msg)
   {
+    ROS_INFO("We are in the velocity callback");
     current_speed = msg->data;
   }
 
 
   void car_steeringCallback(const std_msgs::Float32::ConstPtr& msg)
   {
+    ROS_INFO("We are in the steering callback");
     current_steering_angle = msg->data;
   }
 
 
   int main(int argc, char** argv){
 
-
+    ROSCONSOLE_AUTOINIT;
+    ROS_INFO("does it get here");
     ros::init(argc, argv, "odometry_publisher");
 
     ros::NodeHandle n;
     ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
     tf::TransformBroadcaster odom_broadcaster;
-    ros::Subscriber sub_st = n.subscribe("turning", 1000, car_steeringCallback);
-    ros::Subscriber sub_vel = n.subscribe("velocity", 1000, car_velocityCallback);
+    ros::Subscriber sub_st = n.subscribe("steering_angle", 1000, car_steeringCallback);
+    ros::Subscriber sub_vel = n.subscribe("speed", 1000, car_velocityCallback);
     double wheelbase_ = .290;
     //double current_speed(0.0);
     //double current_steering_angle(0.0);
@@ -42,10 +46,12 @@ double current_steering_angle = 0.0;
     current_time = ros::Time::now();
     last_time = ros::Time::now();
 
-    ros::Rate r(1.0);
+    ros::Rate r(10.0);
     while(n.ok()){
-
-      ros::spinOnce();               // check for incoming messages
+      ROS_INFO("inside while loop");
+      ROS_INFO("%f", current_speed);
+      ROS_INFO("%f", current_steering_angle);
+      // ros::spinOnce();               // check for incoming messages
       current_time = ros::Time::now();
 
       double dt = (current_time - last_time).toSec();
@@ -107,11 +113,12 @@ double current_steering_angle = 0.0;
 
       //send the transform
       odom_broadcaster.sendTransform(odom_trans);
-
+      ROS_INFO("after send transform");
       //next, we'll publish the odometry message over ROS
 
       //publish the message
       odom_pub.publish(odom);
+      ROS_INFO("after publish");
 
       last_time = current_time;
       r.sleep();
