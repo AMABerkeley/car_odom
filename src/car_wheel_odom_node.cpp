@@ -5,18 +5,15 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Float32.h>
 
-namespace car_wheel_odom {
 
   void car_velocityCallback(const std_msgs::Float32::ConstPtr& msg)
   {
-    
     double current_speed = msg->data;
   }
 
 
   void car_steeringCallback(const std_msgs::Float32::ConstPtr& msg)
   {
-    
     double current_steering_angle = msg->data;
   }
 
@@ -32,7 +29,6 @@ namespace car_wheel_odom {
     ros::Subscriber sub_st = n.subscribe("turning", 1000, car_steeringCallback);
     ros::Subscriber sub_vel = n.subscribe("velocity", 1000, car_velocityCallback);
     double wheelbase_ = .290;
-    
     double current_speed(0.0);
     double current_steering_angle(0.0);
     double current_angular_velocity(0.0);
@@ -60,8 +56,6 @@ namespace car_wheel_odom {
 
       yaw_ += current_angular_velocity * dt;
 
-
-      
 
       // publish odometry message
       nav_msgs::Odometry::Ptr odom(new nav_msgs::Odometry);
@@ -121,4 +115,3 @@ namespace car_wheel_odom {
       r.sleep();
     }
   }
-}  
