@@ -1,4 +1,6 @@
 <launch>
-<node pkg="car_odom" type="car_wheel_odom" name="car_wheel_odom" output="screen">
-  </node>
+<!-- <node pkg="car_odom" type="car_wheel_odom" name="car_wheel_odom" output="screen">
+  </node> -->
+  <node pkg="car_odom" name="car_wheel_odom" type="car_wheel_odom_node.py">
+  </node>  
 </launch>

@@ -2,9 +2,7 @@
 # license removed for brevity
 import rospy
 import tf
-import math
-from math import sin, cos, pi
-#TODO : Import Odometry from nav_msgs
+from math import sin, cos, pi, tan
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from std_msgs.msg import UInt16
@@ -14,19 +12,25 @@ from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 global current_speed
 global gps
 global current_steering_angle
+global current_angular_velocity
 
+current_angular_velocity = 0
 current_steering_angle = 0
 current_speed = 0
-gps=False
+wheelbase_ = .290
 
 def velocity_callback(msgs):
     global current_speed
     current_speed = msgs.data
 
 def steering_callback(msgs):
+    global current_speed
     global current_steering_angle
+    global current_angular_velocity
     current_steering_angle = msgs.data
-    
+    current_angular_velocity = current_speed * tan(current_steering_angle) / wheelbase_
+
+
 def listener():
 
     rospy.init_node('odometry_publisher', anonymous=True)
@@ -39,10 +43,10 @@ def listener():
     # rospy.Subscriber("velocity_gps", UInt16,)
     #rospy.Subscriber("throttle", UInt16)
     
-def car_control():
+def odom_control():
     global current_speed
-    global gps
     global current_steering_angle
+    global current_angular_velocity
 
     # pub_th = rospy.Publisher('servo_th', UInt16, queue_size=10)
     # pub_st = rospy.Publisher('servo_st', UInt16, queue_size=10)
@@ -51,24 +55,22 @@ def car_control():
 
     odom_pub = rospy.Publisher('odom', Odometry, queue_size=50)
     odom_broadcaster = tf.TransformBroadcaster()
-    wheelbase_ = .290
-    current_angular_velocity = current_speed * tan(current_steering_angle) / wheelbase_
     x_ = 0.0
     y_ = 0.0
     yaw_ = 0.0
 
 
-    current_time = rospy.get_time()
-    last_time = rospy.get_time()
-    rate = rospy.Rate(10) # 10hz
+    current_time = rospy.Time.now()
+    last_time = rospy.Time.now()
+    rate = rospy.Rate(40) # 10hz
 
 
     while not rospy.is_shutdown():
 
-        current_time = rospy.get_time()
+        current_time = rospy.Time.now()
         #compute odometry in a typical way given robot velocities
         
-        dt = current_time - last_time
+        dt = (current_time - last_time).to_sec()
 
         x_dot = current_speed * cos(yaw_)
         y_dot = current_speed * sin(yaw_)
@@ -97,7 +99,7 @@ def car_control():
         odom_pub.publish(odom)
 
         last_time = current_time
-        r.sleep()
+        rate.sleep()
 
 
         # velocity_pwm = velocity * 30 + 1475
@@ -129,6 +131,6 @@ def car_control():
 if __name__ == '__main__':
     try:
         listener()
-        car_control()
+        odom_control()
     except rospy.ROSInterruptException:
         pass
