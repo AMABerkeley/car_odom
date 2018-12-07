@@ -5,16 +5,18 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Float32.h>
 
+double current_speed = 0.0;
+double current_steering_angle = 0.0;
 
   void car_velocityCallback(const std_msgs::Float32::ConstPtr& msg)
   {
-    double current_speed = msg->data;
+    current_speed = msg->data;
   }
 
 
   void car_steeringCallback(const std_msgs::Float32::ConstPtr& msg)
   {
-    double current_steering_angle = msg->data;
+    current_steering_angle = msg->data;
   }
 
 
@@ -29,9 +31,9 @@
     ros::Subscriber sub_st = n.subscribe("turning", 1000, car_steeringCallback);
     ros::Subscriber sub_vel = n.subscribe("velocity", 1000, car_velocityCallback);
     double wheelbase_ = .290;
-    double current_speed(0.0);
-    double current_steering_angle(0.0);
-    double current_angular_velocity(0.0);
+    //double current_speed(0.0);
+    //double current_steering_angle(0.0);
+    double current_angular_velocity = 0.0;
     current_angular_velocity = current_speed * tan(current_steering_angle) / wheelbase_;
 
     double x_(0.0), y_(0.0), yaw_(0.0);
