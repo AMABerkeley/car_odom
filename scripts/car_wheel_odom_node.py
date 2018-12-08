@@ -9,11 +9,14 @@ from std_msgs.msg import UInt16
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 
+
 global current_speed
 global gps
 global current_steering_angle
 global current_angular_velocity
 global ins_odom
+
+rospy.get_param("/ins_flag")
 
 current_angular_velocity = 0
 current_steering_angle = 0
@@ -60,11 +63,13 @@ def odom_control():
     # pub_speed = rospy.Publisher('speed', Float32, queue_size=10)
     # pub_st_ang = rospy.Publisher('steering_angle', Float32, queue_size=10)
 
-    odom_pub_ins = rospy.Publisher('odom', Odometry, queue_size=50)
-    odom_broadcaster_ins = tf.TransformBroadcaster()
-
-    odom_pub = rospy.Publisher('odom', Odometry, queue_size=50)
-    odom_broadcaster = tf.TransformBroadcaster()
+    if ins_flag == True:
+        odom_pub_ins = rospy.Publisher('odom', Odometry, queue_size=50)
+        odom_broadcaster_ins = tf.TransformBroadcaster()
+    else:
+        odom_pub = rospy.Publisher('odom', Odometry, queue_size=50)
+        odom_broadcaster = tf.TransformBroadcaster()
+    
     x_ = 0.0
     y_ = 0.0
     yaw_ = 0.0
@@ -90,26 +95,18 @@ def odom_control():
 
         yaw_ += current_angular_velocity * dt
 
-        odom_quat = tf.transformations.quaternion_from_euler(0, 0, yaw_)
-
-        odom_broadcaster.sendTransform(
-            (x_,y_,0),
-            odom_quat,
-            current_time,
-            "base_link",
-            "odom"
-            )
-
-        odom_quat_ins = tf.transformations.quaternion_from_euler(0, 0, yaw_)
-
-        odom_broadcaster_ins.sendTransform(
-            (x_,y_,0),
-            odom_quat_ins,
-            current_time,
-            "base_link",
-            "odom"
-            )
         if ins_flag == True:
+            
+            odom_quat_ins = ins_odom.pose.pose.orientation
+            odom_pos_ins = ins_odom.pose.pose.position
+            odom_broadcaster_ins.sendTransform(
+                odom_pos_ins,
+                odom_quat_ins,
+                current_time,
+                "base_link",
+                "odom"
+                )    
+
             odom = Odometry()
             odom.header.stamp = current_time
             odom.header.frame_id = "odom"
@@ -118,6 +115,17 @@ def odom_control():
             odom.twist.twist = ins_odom.twist.twist
             odom_pub_ins.pubish(odom)
         else:
+            odom_quat = tf.transformations.quaternion_from_euler(0, 0, yaw_)
+
+            odom_broadcaster.sendTransform(
+                (x_,y_,0),
+                odom_quat,
+                current_time,
+                "base_link",
+                "odom"
+                )
+
+
             odom = Odometry()
             odom.header.stamp = current_time
             odom.header.frame_id = "odom"
@@ -125,6 +133,8 @@ def odom_control():
             odom.child_frame_id = "base_link"
             odom.twist.twist = Twist(Vector3(x_dot, y_dot, 0), Vector3(0, 0, current_angular_velocity))
             odom_pub.publish(odom)
+
+
 
         last_time = current_time
         rate.sleep()
