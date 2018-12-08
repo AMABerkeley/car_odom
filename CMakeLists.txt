@@ -140,10 +140,10 @@ add_compile_options(-std=c++11)
 ##add_executable(${PROJECT_NAME}_node src/car_odom_node.cpp)
 
 ## Declare a C++ executable
-add_executable(car_wheel_odom src/car_wheel_odom_node.cpp)
+#add_executable(car_wheel_odom src/car_wheel_odom_node.cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(car_wheel_odom ${catkin_LIBRARIES})
+#target_link_libraries(car_wheel_odom ${catkin_LIBRARIES})
 
 
 ## Rename C++ executable without prefix

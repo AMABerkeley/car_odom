@@ -1,6 +1,13 @@
+<?xml version="1.0"?>
+
 <launch>
-<!-- <node pkg="car_odom" type="car_wheel_odom" name="car_wheel_odom" output="screen">
-  </node> -->
-  <node pkg="car_odom" name="car_wheel_odom" type="car_wheel_odom_node.py">
-  </node>  
+    <!-- run pointcloud_to_laserscan node -->
+    <node pkg="car_odom" name="car_wheel_odom" type="car_wheel_odom_node.py">
+
+        <param name="ins_flag" value="False" />
+        <param name="ins_flag_comb" value="True" />
+
+
+    </node>
+
 </launch>
