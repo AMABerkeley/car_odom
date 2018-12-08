@@ -64,8 +64,8 @@ def odom_control():
     global current_steering_angle
     global current_angular_velocity
     global ins_odom
-    global error_x
-    global error_y
+    global initial_offset_x
+    global initial_offset_y
     global beta
 
 
@@ -87,7 +87,9 @@ def odom_control():
     x_ = 0.0
     y_ = 0.0
     yaw_ = 0.0
-
+    odom_pos_ins = ins_odom.pose.pose.position
+    initial_offset_x = odom_pos_ins.x - 0.0
+    initial_offset_y = odom_pos_ins.y - 0.0
 
     current_time = rospy.Time.now()
     last_time = rospy.Time.now()
@@ -133,16 +135,10 @@ def odom_control():
 
         elif ins_flag_comb == True:
 
-
-
-
-
             odom_quat_ins = ins_odom.pose.pose.orientation
             odom_pos_ins = ins_odom.pose.pose.position
-            error_x = odom_pos_ins.x - x_
-            error_y = odom_pos_ins.y - y_
-            odom_quat_ins_comb_x = odom_pos_ins.x - error_x
-            odom_quat_ins_comb_y = odom_pos_ins.y - error_y
+            odom_quat_ins_comb_x = odom_pos_ins.x - initial_offset_x
+            odom_quat_ins_comb_y = odom_pos_ins.y - initial_offset_y
 
 
             odom_broadcaster_ins.sendTransform(
