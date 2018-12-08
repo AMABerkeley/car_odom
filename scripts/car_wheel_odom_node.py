@@ -15,6 +15,7 @@ global gps
 global current_steering_angle
 global current_angular_velocity
 global ins_odom
+global beta
 
 rospy.get_param("/ins_flag")
 
@@ -23,6 +24,8 @@ current_steering_angle = 0
 current_speed = 0
 wheelbase_ = .290
 ins_odom = Odometry()
+center_to_front = .17
+beta = 0
 
 def velocity_callback(msgs):
     global current_speed
@@ -32,8 +35,10 @@ def steering_callback(msgs):
     global current_speed
     global current_steering_angle
     global current_angular_velocity
+    global beta
     current_steering_angle = msgs.data
-    current_angular_velocity = current_speed * tan(current_steering_angle) / wheelbase_
+    beta = atan(.5 * tan(current_steering_angle))
+    current_angular_velocity = (current_speed/center_to_front) * sin(beta)
 
 def ins_callback(msg):
     global ins_odom
@@ -57,6 +62,7 @@ def odom_control():
     global current_steering_angle
     global current_angular_velocity
     global ins_odom
+    global beta
 
     # pub_th = rospy.Publisher('servo_th', UInt16, queue_size=10)
     # pub_st = rospy.Publisher('servo_st', UInt16, queue_size=10)
@@ -84,16 +90,16 @@ def odom_control():
 
         current_time = rospy.Time.now()
         #compute odometry in a typical way given robot velocities
-        
         dt = (current_time - last_time).to_sec()
 
-        x_dot = current_speed * cos(yaw_)
-        y_dot = current_speed * sin(yaw_)
+        yaw_ += current_angular_velocity * dt
+
+        x_dot = current_speed * cos(yaw_ + beta)
+        y_dot = current_speed * sin(yaw_ + beta)
 
         x_ += x_dot * dt
         y_ += y_dot * dt
 
-        yaw_ += current_angular_velocity * dt
 
         if ins_flag == True:
             
@@ -124,8 +130,6 @@ def odom_control():
                 "base_link",
                 "odom"
                 )
-
-
             odom = Odometry()
             odom.header.stamp = current_time
             odom.header.frame_id = "odom"
