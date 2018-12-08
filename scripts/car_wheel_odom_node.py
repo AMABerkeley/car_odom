@@ -13,11 +13,13 @@ global current_speed
 global gps
 global current_steering_angle
 global current_angular_velocity
+global ins_odom
 
 current_angular_velocity = 0
 current_steering_angle = 0
 current_speed = 0
 wheelbase_ = .290
+ins_odom = Odometry()
 
 def velocity_callback(msgs):
     global current_speed
@@ -30,13 +32,17 @@ def steering_callback(msgs):
     current_steering_angle = msgs.data
     current_angular_velocity = current_speed * tan(current_steering_angle) / wheelbase_
 
+def ins_callback(msg):
+    global ins_odom
+    ins_odom = msg
 
 def listener():
 
     rospy.init_node('odometry_publisher', anonymous=True)
     # rospy.Subscriber("velocity", UInt16, velocity_control)
 
-
+    rospy.Subscriber("ins", Odometry, ins_callback)
+    # rospy.Subscriber("", , )
     rospy.Subscriber("speed", Float32, velocity_callback)
     rospy.Subscriber("steering_angle", Float32, steering_callback)
 
@@ -47,11 +53,15 @@ def odom_control():
     global current_speed
     global current_steering_angle
     global current_angular_velocity
+    global ins_odom
 
     # pub_th = rospy.Publisher('servo_th', UInt16, queue_size=10)
     # pub_st = rospy.Publisher('servo_st', UInt16, queue_size=10)
     # pub_speed = rospy.Publisher('speed', Float32, queue_size=10)
     # pub_st_ang = rospy.Publisher('steering_angle', Float32, queue_size=10)
+
+    odom_pub_ins = rospy.Publisher('odom', Odometry, queue_size=50)
+    odom_broadcaster_ins = tf.TransformBroadcaster()
 
     odom_pub = rospy.Publisher('odom', Odometry, queue_size=50)
     odom_broadcaster = tf.TransformBroadcaster()
@@ -89,6 +99,24 @@ def odom_control():
             "base_link",
             "odom"
             )
+
+        odom_quat_ins = tf.transformations.quaternion_from_euler(0, 0, yaw_)
+
+        odom_broadcaster_ins.sendTransform(
+            (x_,y_,0),
+            odom_quat_ins,
+            current_time,
+            "base_link",
+            "odom"
+            )
+
+        odom_ins_modify_frame = Odometry()
+        odom.header.stamp = current_time
+        odom.header.frame_id = ""
+        odom.pose.pose = ins_odom.pose.pose
+        odom.child_frame_id = ""
+        odom.twist.twist = ins_odom.twist.twist
+        odom_pub_ins.pubish(odom_ins_modify_frame)
 
         odom = Odometry()
         odom.header.stamp = current_time
