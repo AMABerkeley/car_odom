@@ -109,22 +109,22 @@ def odom_control():
             "base_link",
             "odom"
             )
-
-        odom_ins_modify_frame = Odometry()
-        odom.header.stamp = current_time
-        odom.header.frame_id = ""
-        odom.pose.pose = ins_odom.pose.pose
-        odom.child_frame_id = ""
-        odom.twist.twist = ins_odom.twist.twist
-        odom_pub_ins.pubish(odom_ins_modify_frame)
-
-        odom = Odometry()
-        odom.header.stamp = current_time
-        odom.header.frame_id = "odom"
-        odom.pose.pose = Pose(Point(x_, y_, 0), Quaternion(*odom_quat))
-        odom.child_frame_id = "base_link"
-        odom.twist.twist = Twist(Vector3(x_dot, y_dot, 0), Vector3(0, 0, current_angular_velocity))
-        odom_pub.publish(odom)
+        if ins_flag == True:
+            odom = Odometry()
+            odom.header.stamp = current_time
+            odom.header.frame_id = "odom"
+            odom.pose.pose = ins_odom.pose.pose
+            odom.child_frame_id = "base_link"
+            odom.twist.twist = ins_odom.twist.twist
+            odom_pub_ins.pubish(odom)
+        else:
+            odom = Odometry()
+            odom.header.stamp = current_time
+            odom.header.frame_id = "odom"
+            odom.pose.pose = Pose(Point(x_, y_, 0), Quaternion(*odom_quat))
+            odom.child_frame_id = "base_link"
+            odom.twist.twist = Twist(Vector3(x_dot, y_dot, 0), Vector3(0, 0, current_angular_velocity))
+            odom_pub.publish(odom)
 
         last_time = current_time
         rate.sleep()
