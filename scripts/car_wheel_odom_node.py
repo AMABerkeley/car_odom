@@ -2,7 +2,7 @@
 # license removed for brevity
 import rospy
 import tf
-from math import sin, cos, pi, tan
+from math import sin, cos, pi, tan, atan
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from std_msgs.msg import UInt16
