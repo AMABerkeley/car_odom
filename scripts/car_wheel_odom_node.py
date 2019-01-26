@@ -8,6 +8,8 @@ from std_msgs.msg import String
 from std_msgs.msg import UInt16
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
+from tf.transformations import *
+
 
 
 global current_speed
@@ -45,7 +47,15 @@ def steering_callback(msgs):
 def ins_callback(msg):
     global ins_odom
     ins_odom = msg
+    ins_odom.pose.pose.orientation
 
+    # q = ins_odom.pose.pose.orientation
+    # q_rot = quaternion_from_euler(0 , 3.14, 0)
+    # qwe = quaternion_multiply(q_rot, [q.x, q.y, q.z, q.w])
+    # ins_odom.pose.pose.orientation.x = qwe[0]
+    # ins_odom.pose.pose.orientation.y = qwe[1]
+    # ins_odom.pose.pose.orientation.z = qwe[2]
+    # ins_odom.pose.pose.orientation.w = qwe[3]
 def listener():
 
     rospy.init_node('odometry_publisher', anonymous=True)
@@ -87,18 +97,22 @@ def odom_control():
     x_ = 0.0
     y_ = 0.0
     yaw_ = 0.0
-    odom_pos_ins = ins_odom.pose.pose.position
-    initial_offset_x = odom_pos_ins.x - 0.0
-    initial_offset_y = odom_pos_ins.y - 0.0
 
     current_time = rospy.Time.now()
     last_time = rospy.Time.now()
-    rate = rospy.Rate(40) # 10hz
+    rate = rospy.Rate(20) # 10hz
 
-
+    odom_pos_ins = ins_odom.pose.pose.position
+    initial_offset_x = 0
+    initial_offset_y = 0
+    counter = 0
 
 
     while not rospy.is_shutdown():
+        if counter < 10:
+            counter = counter + 1
+            initial_offset_x = odom_pos_ins.x
+            initial_offset_y = odom_pos_ins.y 
 
         current_time = rospy.Time.now()
         #compute odometry in a typical way given robot velocities
@@ -137,8 +151,8 @@ def odom_control():
 
             odom_quat_ins = ins_odom.pose.pose.orientation
             odom_pos_ins = ins_odom.pose.pose.position
-            odom_quat_ins_comb_x = odom_pos_ins.x - initial_offset_x
-            odom_quat_ins_comb_y = odom_pos_ins.y - initial_offset_y
+            odom_quat_ins_comb_x = odom_pos_ins.x  - initial_offset_x
+            odom_quat_ins_comb_y = odom_pos_ins.y  - initial_offset_y
 
 
             odom_broadcaster_ins.sendTransform(
